@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 
-const Schema = mongoose.Schema();
+const { Schema } = mongoose;
 
 const commentSchema = new Schema({
   user: { Type: mongoose.Schema.Types.ObjectId, Ref: 'User' },

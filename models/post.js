@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { DateTime } = require('luxon');
 
-const Schema = mongoose.Schema();
+const { Schema } = mongoose;
 
 const postSchema = new Schema({
   image: {
