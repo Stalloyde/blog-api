@@ -11,21 +11,6 @@ exports.homeGET = (req, res, next) => {
   res.json('Hello!');
 };
 
-exports.loginGET = (req, res, next) => {
-  res.json('GET - Login page');
-};
-
-exports.loginPOST = (req, res, next) => {
-  //   const newUser = new User({
-  //     username: 'Stalloyde',
-  //     password: 'test',
-  //     isMod: true,
-  //   });
-
-  //   await newUser.save();
-  res.json('POST - Login page');
-};
-
 exports.signupGET = (req, res, next) => {
   res.json('GET - Signup page');
 };
@@ -71,6 +56,21 @@ exports.signupPOST = [
     }
   }),
 ];
+
+exports.loginGET = (req, res, next) => {
+  res.json('GET - Login page');
+};
+
+exports.loginPOST = (req, res, next) => {
+  //   const newUser = new User({
+  //     username: 'Stalloyde',
+  //     password: 'test',
+  //     isMod: true,
+  //   });
+
+  //   await newUser.save();
+  res.json('POST - Login page');
+};
 
 exports.postGET = (req, res, next) => {
   res.json(`GET - Post page ${req.params.postId}`);
