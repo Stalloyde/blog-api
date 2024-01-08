@@ -1,6 +1,9 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
+const expressAsyncHandler = require('express-async-handler');
+const { body, validatorResult, validationResult } = require('express-validator');
+const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
 
@@ -27,16 +30,50 @@ exports.signupGET = (req, res, next) => {
   res.json('GET - Signup page');
 };
 
-exports.signupPOST = (req, res, next) => {
-  //   const newUser = new User({
-  //     username: 'Stalloyde',
-  //     password: 'test',
-  //     isMod: true,
-  //   });
+exports.signupPOST = [
+  body('username').notEmpty().trim().escape()
+    .withMessage('Input required'),
+  body('password').notEmpty().trim().escape()
+    .withMessage('Input required'),
+  body('confirmPassword').notEmpty().trim().custom((value, { req }) => value === req.body.password)
+    .escape()
+    .withMessage('Passwords do not match'),
 
-  //   await newUser.save();
-  res.json('POST - Signup page');
-};
+  expressAsyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    let newUser = new User({
+      username: req.body.username,
+      password: req.body.password,
+      isMod: false,
+    });
+
+    const { username } = newUser;
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json({ username, errorsArray });
+    } else {
+      const checkDuplicate = await User.findOne({ username: req.body.username });
+
+      if (checkDuplicate) {
+        res.json({ username, duplicateError: 'Username has been taken. Try another.' });
+      } else {
+        bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+          if (err) return next(err);
+
+          newUser = new User({
+            username: req.body.username,
+            password: hashedPassword,
+            isMod: false,
+          });
+          // await newUser.save();
+          res.json(newUser);
+        });
+      }
+    }
+  }),
+];
 
 exports.postGET = (req, res, next) => {
   res.json(`GET - Post page ${req.params.postId}`);
