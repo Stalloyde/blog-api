@@ -42,7 +42,7 @@ exports.signupPOST = [
   expressAsyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
-    let newUser = new User({
+    const newUser = new User({
       username: req.body.username,
       password: req.body.password,
       isMod: false,
@@ -54,22 +54,19 @@ exports.signupPOST = [
       const errorsArray = errors.array();
       res.json({ username, errorsArray });
     } else {
-      const checkDuplicate = await User.findOne({ username: req.body.username });
+      const checkDuplicate = await User.findOne({ username });
 
       if (checkDuplicate) {
         res.json({ username, duplicateError: 'Username has been taken. Try another.' });
-      } else {
-        bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-          if (err) return next(err);
+      }
 
-          newUser = new User({
-            username: req.body.username,
-            password: hashedPassword,
-            isMod: false,
-          });
-          // await newUser.save();
-          res.json(newUser);
-        });
+      try {
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        newUser.password = hashedPassword;
+        // await newUser.save();
+        res.json(newUser);
+      } catch (err) {
+        return next(err);
       }
     }
   }),
