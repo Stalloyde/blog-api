@@ -64,7 +64,37 @@ exports.loginGET = (req, res, next) => {
 };
 
 exports.loginPOST = [
+  body('username').notEmpty().trim().escape()
+    .withMessage('Input required'),
+  body('password').notEmpty().trim().escape()
+    .withMessage('Input required'),
 
+  expressAsyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json(errorsArray);
+    } else {
+      const currentUser = await User.findOne({ username: req.body.username });
+      if (!currentUser) {
+        res.json('User not found');
+      }
+
+      const match = await bcrypt.compare(req.body.password, currentUser.password);
+      if (!match) {
+        res.json('Wrong password');
+      }
+
+      jwt.sign({ currentUser }, process.env.SECRET, { expiresIn: '30s', algorithm: 'HS256' }, (err, token) => {
+        if (err) {
+          throw Error(err);
+        } else {
+          res.json({ token });
+        }
+      });
+    }
+  }),
 ];
 
 exports.postGET = (req, res, next) => {
