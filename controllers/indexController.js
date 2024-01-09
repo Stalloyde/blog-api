@@ -2,7 +2,9 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const expressAsyncHandler = require('express-async-handler');
-const { body, validatorResult, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
@@ -37,12 +39,12 @@ exports.signupPOST = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json({ username, errorsArray });
+      res.json(username, errorsArray);
     } else {
       const checkDuplicate = await User.findOne({ username });
 
       if (checkDuplicate) {
-        res.json({ username, duplicateError: 'Username has been taken. Try another.' });
+        res.json(username, { duplicateError: 'Username has been taken. Try another.' });
       }
 
       try {
@@ -61,28 +63,14 @@ exports.loginGET = (req, res, next) => {
   res.json('GET - Login page');
 };
 
-exports.loginPOST = (req, res, next) => {
-  //   const newUser = new User({
-  //     username: 'Stalloyde',
-  //     password: 'test',
-  //     isMod: true,
-  //   });
+exports.loginPOST = [
 
-  //   await newUser.save();
-  res.json('POST - Login page');
-};
+];
 
 exports.postGET = (req, res, next) => {
   res.json(`GET - Post page ${req.params.postId}`);
 };
 
 exports.postPOST = (req, res, next) => {
-  //   const newUser = new User({
-  //     username: 'Stalloyde',
-  //     password: 'test',
-  //     isMod: true,
-  //   });
-
-  //   await newUser.save();
   res.json(`POST - Post page ${req.params.postId}`);
 };
