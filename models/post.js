@@ -14,10 +14,10 @@ const postSchema = new Schema({
     path: String,
     size: Number,
   },
-  title: { Type: String, required: true },
-  content: { Type: String, required: true },
-  date: { Type: Date, required: true },
-  isPublished: { Type: Boolean, required: true },
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  date: { type: Date, required: true },
+  isPublished: { type: Boolean, required: true },
 });
 
 postSchema.virtual('postDateFormatted').get(function () {
