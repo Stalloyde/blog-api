@@ -5,23 +5,24 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const { ExtractJwt } = require('passport-jwt');
 const User = require('../models/user');
 
-const opts = {};
-opts.secretOrKey = process.env.SECRET;
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+const options = {};
+options.secretOrKey = process.env.SECRET;
+options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 
-const verify = async (jwtPayload, done) => {
-  console.log('middleware is running');
+const auth = async (jwtPayload, done) => {
+  console.log('Verify middleware is running');
   try {
     const currentUser = await User.findOne({ id: jwtPayload.sub });
-    if (currentUser) {
-      return done(null, currentUser);
+
+    if (!currentUser) {
+      return done(null, false);
     }
-    return done(null, false);
+    return done(null, currentUser);
   } catch (err) {
     return done(err, false);
   }
 };
 
-const strategy = new JwtStrategy(opts, verify);
+const strategy = new JwtStrategy(options, auth);
 
 passport.use(strategy);

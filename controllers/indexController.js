@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
+const Post = require('../models/post');
 
 exports.homeGET = (req, res, next) => {
   res.json('Hello!');
@@ -86,7 +87,7 @@ exports.loginPOST = [
         res.json('Wrong password');
       }
 
-      jwt.sign({ currentUser }, process.env.SECRET, { expiresIn: '30s', algorithm: 'HS256' }, (err, token) => {
+      jwt.sign({ currentUser }, process.env.SECRET, { expiresIn: '1h', algorithm: 'HS256' }, (err, token) => {
         if (err) {
           throw Error(err);
         } else {
@@ -97,8 +98,17 @@ exports.loginPOST = [
   }),
 ];
 
-exports.postGET = (req, res, next) => { // protected route, needs authorisation
-  res.json(`GET - Post page ${req.params.postId}`);
+exports.postGET = (req, res, next) => {
+  jwt.verify(req.token, process.env.SECRET, async (err, authData) => {
+    if (err) {
+      res.sendStatus(403);
+    } else {
+      res.json({
+        posts: 'Query all posts and pass it here',
+        authData,
+      });
+    }
+  });
 };
 
 exports.postPOST = (req, res, next) => { // protected route, needs authorisation
