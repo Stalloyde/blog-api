@@ -97,10 +97,10 @@ exports.loginPOST = [
   }),
 ];
 
-exports.postGET = (req, res, next) => {
+exports.postGET = (req, res, next) => { // protected route, needs authorisation
   res.json(`GET - Post page ${req.params.postId}`);
 };
 
-exports.postPOST = (req, res, next) => {
+exports.postPOST = (req, res, next) => { // protected route, needs authorisation
   res.json(`POST - Post page ${req.params.postId}`);
 };
