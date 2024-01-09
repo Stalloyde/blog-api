@@ -9,10 +9,10 @@ const opts = {};
 opts.secretOrKey = process.env.SECRET;
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 
-passport.use(new JwtStrategy(opts, (async (jwt_payload, done) => {
+const verify = async (jwtPayload, done) => {
   console.log('middleware is running');
   try {
-    const currentUser = await User.findOne({ id: jwt_payload.sub });
+    const currentUser = await User.findOne({ id: jwtPayload.sub });
     if (currentUser) {
       return done(null, currentUser);
     }
@@ -20,4 +20,8 @@ passport.use(new JwtStrategy(opts, (async (jwt_payload, done) => {
   } catch (err) {
     return done(err, false);
   }
-})));
+};
+
+const strategy = new JwtStrategy(opts, verify);
+
+passport.use(strategy);
