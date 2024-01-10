@@ -15,7 +15,7 @@ const postSchema = new Schema({
     size: Number,
   },
 
-  user: { type: mongoose.Schema.Types.ObjectId, Ref: 'User' },
+  author: { type: mongoose.Schema.Types.ObjectId, Ref: 'User' },
   title: { type: String, required: true },
   content: { type: String, required: true },
   date: { type: Date, required: true },

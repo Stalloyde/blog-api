@@ -22,7 +22,8 @@ exports.postPOST = [
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
-    const user = await User.findById(currentUser.user._id);
+    console.log(currentUser);
+    const author = await User.findById(currentUser.user._id);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -30,7 +31,7 @@ exports.postPOST = [
       res.json({ title: req.body.title, content: req.body.content, errorsArray });
     } else {
       const newPost = new Post({
-        user,
+        author,
         title: req.body.title,
         content: req.body.content,
         date: new Date(),
