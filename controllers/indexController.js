@@ -91,16 +91,17 @@ exports.loginPOST = [
         if (err) {
           throw Error(err);
         } else {
-          res.json({ Bearer: `Bearer ${token}` });
+          res.json({ user, Bearer: `Bearer ${token}` });
         }
       });
     }
   }),
 ];
 
-exports.postGET = (req, res, next) => {
+exports.postGET = async (req, res, next) => {
+  const posts = await Post.find();
   res.json({
-    posts: 'Query all posts and pass it here',
+    posts,
     user: req.user,
     bearer: req.headers.authorization,
   });
@@ -140,7 +141,7 @@ exports.postPOST = [
         newPost.image.path = req.file.path;
         newPost.image.size = req.file.size;
       }
-      await newPost.save();
+      // await newPost.save();
       res.json(newPost);
     }
   }),
