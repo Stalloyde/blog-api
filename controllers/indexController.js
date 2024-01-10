@@ -91,7 +91,7 @@ exports.loginPOST = [
         if (err) {
           throw Error(err);
         } else {
-          res.json({ token });
+          res.json({ Bearer: `Bearer ${token}` });
         }
       });
     }
@@ -99,15 +99,10 @@ exports.loginPOST = [
 ];
 
 exports.postGET = (req, res, next) => {
-  jwt.verify(req.token, process.env.SECRET, async (err, authData) => {
-    if (err) {
-      res.sendStatus(403);
-    } else {
-      res.json({
-        posts: 'Query all posts and pass it here',
-        authData,
-      });
-    }
+  res.json({
+    posts: 'Query all posts and pass it here',
+    user: req.user,
+    bearer: req.headers.authorization,
   });
 };
 
