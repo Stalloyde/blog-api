@@ -1,15 +1,58 @@
-const express = require('express');
+require('dotenv').config();
 const mongoose = require('mongoose');
+const express = require('express');
+const expressAsyncHandler = require('express-async-handler');
+const { body, validationResult } = require('express-validator');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
+const Post = require('../models/post');
 
-exports.homeGET = (req, res, next) => {
+exports.postGET = (req, res, next) => {
   res.json('GET - Admin home page');
 };
 
-exports.homePOST = (req, res, next) => {
-  res.json('POST - Admin Add new post');
-};
+exports.postPOST = [
+  body('title').notEmpty().trim().escape()
+    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape()
+    .withMessage('Input required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const currentUser = req.user;
+    const user = await User.findById(currentUser.user._id);
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json({ title: req.body.title, content: req.body.content, errorsArray });
+    } else {
+      const newPost = new Post({
+        user,
+        title: req.body.title,
+        content: req.body.content,
+        date: new Date(),
+        isPublished: true,
+      });
+
+      // has image file
+      if (req.file) {
+        newPost.image.fieldname = req.file.fieldname;
+        newPost.image.originalname = req.file.originalname;
+        newPost.image.encoding = req.file.encoding;
+        newPost.image.mimetype = req.filemimetype;
+        newPost.image.destination = req.file.destination;
+        newPost.image.filename = req.filefilename;
+        newPost.image.path = req.file.path;
+        newPost.image.size = req.file.size;
+      }
+      // await newPost.save();
+      res.json(newPost);
+    }
+  }),
+];
 
 exports.postGET = (req, res, next) => {
   res.json(`GET - Admin post page ${req.params.postId}`);
