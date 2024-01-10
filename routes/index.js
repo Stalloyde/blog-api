@@ -13,7 +13,7 @@ router.get('/login', indexController.loginGET);
 router.post('/login', indexController.loginPOST);
 router.get('/signup', indexController.signupGET);
 router.post('/signup', indexController.signupPOST);
-router.get('/:postId', passport.authenticate('jwt', { session: false }), indexController.postGET);
-router.post('/:postId', passport.authenticate('jwt', { session: false }), indexController.postPOST);
+router.get('/posts', passport.authenticate('jwt', { session: false }), indexController.postGET);
+router.post('/posts', passport.authenticate('jwt', { session: false }), indexController.postPOST);
 
 module.exports = router;
