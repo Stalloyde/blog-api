@@ -106,6 +106,42 @@ exports.postGET = (req, res, next) => {
   });
 };
 
-exports.postPOST = (req, res, next) => { // protected route, needs authorisation
-  res.json(`POST - Post page ${req.params.postId}`);
-};
+exports.postPOST = [
+  body('title').notEmpty().trim().escape()
+    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape()
+    .withMessage('Input required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const currentUser = req.user;
+    const user = await User.findById(currentUser.user._id);
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json({ title: req.body.title, content: req.body.content, errorsArray });
+    } else {
+      const newPost = new Post({
+        user,
+        title: req.body.title,
+        content: req.body.content,
+        date: new Date(),
+        isPublished: true,
+      });
+
+      // has image file
+      if (req.file) {
+        newPost.image.fieldname = req.file.fieldname;
+        newPost.image.originalname = req.file.originalname;
+        newPost.image.encoding = req.file.encoding;
+        newPost.image.mimetype = req.filemimetype;
+        newPost.image.destination = req.file.destination;
+        newPost.image.filename = req.filefilename;
+        newPost.image.path = req.file.path;
+        newPost.image.size = req.file.size;
+      }
+      await newPost.save();
+      res.json(newPost);
+    }
+  }),
+];
