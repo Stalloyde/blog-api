@@ -4,9 +4,9 @@ const { DateTime } = require('luxon');
 const { Schema } = mongoose;
 
 const commentSchema = new Schema({
-  user: { Type: mongoose.Schema.Types.ObjectId, Ref: 'User' },
-  content: { Type: String, required: true },
-  date: { Type: Date, required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, Ref: 'User' },
+  content: { type: String, required: true },
+  date: { type: Date, required: true },
 });
 
 commentSchema.virtual('commentDateFormatted').get(function () {
