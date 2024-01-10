@@ -12,12 +12,11 @@ options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 const auth = async (jwtPayload, done) => {
   console.log('Auth middleware is running');
   try {
-    const currentUser = await User.findOne({ id: jwtPayload.sub });
+    const user = await User.findOne({ id: jwtPayload.sub });
 
-    if (!currentUser) {
+    if (!user) {
       return done(null, false);
     }
-
     return done(null, jwtPayload);
   } catch (err) {
     return done(err, false);

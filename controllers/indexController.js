@@ -77,17 +77,17 @@ exports.loginPOST = [
       const errorsArray = errors.array();
       res.json(errorsArray);
     } else {
-      const currentUser = await User.findOne({ username: req.body.username });
-      if (!currentUser) {
+      const user = await User.findOne({ username: req.body.username });
+      if (!user) {
         res.json('User not found');
       }
 
-      const match = await bcrypt.compare(req.body.password, currentUser.password);
+      const match = await bcrypt.compare(req.body.password, user.password);
       if (!match) {
         res.json('Wrong password');
       }
 
-      jwt.sign({ currentUser }, process.env.SECRET, { expiresIn: '1h', algorithm: 'HS256' }, (err, token) => {
+      jwt.sign({ user }, process.env.SECRET, { expiresIn: '1h', algorithm: 'HS256' }, (err, token) => {
         if (err) {
           throw Error(err);
         } else {
