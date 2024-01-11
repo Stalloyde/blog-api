@@ -113,7 +113,7 @@ exports.postIdGET = async (req, res, next) => {
   });
 };
 
-exports.postIdPOST = [
+exports.postPOSTComment = [
   body('content').notEmpty().trim().escape()
     .withMessage('Input required'),
 
