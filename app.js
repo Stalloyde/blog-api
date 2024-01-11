@@ -6,7 +6,7 @@ const logger = require('morgan');
 const passport = require('passport');
 
 const indexRouter = require('./routes/index');
-const adminRouter = require('./routes/admin');
+const modRouter = require('./routes/mod');
 
 const app = express();
 
@@ -18,6 +18,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 
 app.use('/', indexRouter);
-app.use('/admin', adminRouter);
+app.use('/mod', modRouter);
 
 module.exports = app;

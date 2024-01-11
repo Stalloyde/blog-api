@@ -55,15 +55,15 @@ exports.postPOST = [
   }),
 ];
 
-exports.postGET = (req, res, next) => {
+exports.postIdGET = (req, res, next) => {
   res.json(`GET - Admin post page ${req.params.postId}`);
 };
 
-exports.postPUT = (req, res, next) => {
+exports.postIdPUT = (req, res, next) => {
   res.json(`PUT - Admin edit post ${req.params.postId}`);
 };
 
-exports.postDEL = (req, res, next) => {
+exports.postIdDEL = (req, res, next) => {
   res.json(`DEL - Admin delete post ${req.params.postId}`);
 };
 
