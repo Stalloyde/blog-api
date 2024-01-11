@@ -99,14 +99,14 @@ exports.loginPOST = [
 ];
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find();
+  const posts = await Post.find().populate('Comments').populate('User');
   res.json({
     posts,
   });
 };
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.postId);
+  const post = await Post.findById(req.params.postId).populate('Comments').populate('User');
   res.json({
     post,
   });

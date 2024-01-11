@@ -11,7 +11,7 @@ const User = require('../models/user');
 const Post = require('../models/post');
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find();
+  const posts = await Post.find().populate('Comments').populate('User');
   res.json(posts);
 };
 
@@ -56,7 +56,7 @@ exports.postPOST = [
 ];
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.id);
+  const post = await Post.findById(req.params.id).populate('Comments').populate('User');
   res.json(post);
 };
 
