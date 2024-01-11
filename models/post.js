@@ -15,11 +15,12 @@ const postSchema = new Schema({
     size: Number,
   },
 
-  author: { type: mongoose.Schema.Types.ObjectId, Ref: 'User' },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   title: { type: String, required: true },
   content: { type: String, required: true },
   date: { type: Date, required: true },
   isPublished: { type: Boolean, required: true },
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
 });
 
 postSchema.virtual('postDateFormatted').get(function () {
