@@ -107,7 +107,7 @@ exports.postGET = async (req, res, next) => {
 };
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.postId).populate('comments').populate('author');
+  const post = await Post.findById(req.params.id).populate('comments').populate('author');
   res.json({
     post,
   });
@@ -132,11 +132,12 @@ exports.postIdPOST = [
         author,
         content: req.body.content,
         date: new Date(),
-        post,
       });
 
       await newComment.save();
-      res.json(newComment);
+      post.comments.push(newComment);
+      await post.save();
+      res.json(post);
     }
   }),
 ];
