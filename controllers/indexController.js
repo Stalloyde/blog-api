@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
 const Post = require('../models/post');
+const Comment = require('../models/comment');
 
 exports.homeGET = (req, res, next) => {
   res.json('Hello!');
@@ -99,15 +100,43 @@ exports.loginPOST = [
 ];
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find().populate('Comments').populate('User');
+  const posts = await Post.find().populate('comments').populate('author');
   res.json({
     posts,
   });
 };
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.postId).populate('Comments').populate('User');
+  const post = await Post.findById(req.params.postId).populate('comments').populate('author');
   res.json({
     post,
   });
 };
+
+exports.postIdPOST = [
+  body('content').notEmpty().trim().escape()
+    .withMessage('Input required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const currentUser = req.user;
+    const [author, post] = await Promise.all(
+      [User.findById(currentUser.user._id), Post.findById(req.params.id)],
+    );
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json(errorsArray);
+    } else {
+      const newComment = new Comment({
+        author,
+        content: req.body.content,
+        date: new Date(),
+        post,
+      });
+
+      await newComment.save();
+      res.json(newComment);
+    }
+  }),
+];

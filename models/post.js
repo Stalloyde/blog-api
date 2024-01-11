@@ -20,7 +20,6 @@ const postSchema = new Schema({
   content: { type: String, required: true },
   date: { type: Date, required: true },
   isPublished: { type: Boolean, required: true },
-  comments: { type: mongoose.Schema.Types.ObjectId, Ref: 'Comment' },
 });
 
 postSchema.virtual('postDateFormatted').get(function () {
