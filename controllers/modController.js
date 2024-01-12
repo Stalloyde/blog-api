@@ -91,8 +91,6 @@ exports.postPOSTComment = [
 ];
 
 exports.postPUTComment = [
-  body('title').notEmpty().trim().escape()
-    .withMessage('Input required'),
   body('content').notEmpty().trim().escape()
     .withMessage('Input required'),
 
@@ -101,10 +99,9 @@ exports.postPUTComment = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json({ title: req.body.title, content: req.body.content, errorsArray });
+      res.json({ content: req.body.content, errorsArray });
     } else {
       const post = await Post.findById(req.params.id).populate('comments').populate('author');
-      post.title = req.body.title;
       post.content = req.body.content;
 
       // has image file. Need to make file upload on the frontend has a persistent file, like edit inputs
