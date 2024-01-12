@@ -61,21 +61,49 @@ exports.postIdGET = async (req, res, next) => {
   res.json(post);
 };
 
-exports.postIdPUT = [
+exports.postPOSTComment = [
+  body('content').notEmpty().trim().escape()
+    .withMessage('Input required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const currentUser = req.user;
+    const [author, post] = await Promise.all(
+      [User.findById(currentUser.user._id), Post.findById(req.params.id)],
+    );
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json(errorsArray);
+    } else {
+      const newComment = new Comment({
+        author,
+        content: req.body.content,
+        date: new Date(),
+      });
+
+      await newComment.save();
+      post.comments.push(newComment);
+      await post.save();
+      res.json(newComment);
+    }
+  }),
+];
+
+exports.postPUTComment = [
   body('title').notEmpty().trim().escape()
     .withMessage('Input required'),
   body('content').notEmpty().trim().escape()
     .withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
-    const currentUser = req.user;
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
       res.json({ title: req.body.title, content: req.body.content, errorsArray });
     } else {
-      const post = await Post.findById(req.params.id);
+      const post = await Post.findById(req.params.id).populate('comments').populate('author');
       post.title = req.body.title;
       post.content = req.body.content;
 
@@ -96,13 +124,14 @@ exports.postIdPUT = [
     }
   })];
 
-exports.postIdDEL = async (req, res, next) => {
+exports.postDELComment = async (req, res, next) => {
   await Post.deleteOne({ _id: req.params.id });
   res.json(`DEL - Moderator delete post ${req.params.id}`);
 };
 
-exports.commentGET = (req, res, next) => {
-  res.json(`GET - Moderator comment ${req.params.id}/${req.params.commentId}`);
+exports.commentGET = async (req, res, next) => {
+  const comment = await Comment.findById(req.params.commentId);
+  res.json(comment);
 };
 
 exports.commentPUT = [
@@ -124,6 +153,7 @@ exports.commentPUT = [
   }),
 ];
 
-exports.commentDEL = (req, res, next) => {
+exports.commentDEL = async (req, res, next) => {
+  await Comment.findByIdAndDelete(req.params.commentId);
   res.json(`DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`);
 };
