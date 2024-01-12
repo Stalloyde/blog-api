@@ -69,35 +69,28 @@ exports.postIdPUT = [
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
-    const author = await User.findById(currentUser.user._id);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
       res.json({ title: req.body.title, content: req.body.content, errorsArray });
     } else {
-      const updatedPost = new Post({
-        id: req.params.id,
-        author,
-        title: req.body.title,
-        content: req.body.content,
-        date: new Date(),
-        isPublished: true,
-      });
+      const post = await Post.findById(req.params.id);
+      post.title = req.body.title;
+      post.content = req.body.content;
 
       // has image file. Need to make file upload on the frontend has a persistent file, like edit inputs
       if (req.file) {
-        updatedPost.image.fieldname = req.file.fieldname;
-        updatedPost.image.originalname = req.file.originalname;
-        updatedPost.image.encoding = req.file.encoding;
-        updatedPost.image.mimetype = req.filemimetype;
-        updatedPost.image.destination = req.file.destination;
-        updatedPost.image.filename = req.filefilename;
-        updatedPost.image.path = req.file.path;
-        updatedPost.image.size = req.file.size;
+        post.image.fieldname = req.file.fieldname;
+        post.image.originalname = req.file.originalname;
+        post.image.encoding = req.file.encoding;
+        post.image.mimetype = req.filemimetype;
+        post.image.destination = req.file.destination;
+        post.image.filename = req.filefilename;
+        post.image.path = req.file.path;
+        post.image.size = req.file.size;
       }
 
-      const post = await Post.findByIdAndUpdate(req.params.id, { updatedPost });
       await post.save();
       res.json(post);
     }
