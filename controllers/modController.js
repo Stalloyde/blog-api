@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const dbConnection = require('../config/db');
 const User = require('../models/user');
 const Post = require('../models/post');
+const Comment = require('../models/comment');
 
 exports.postGET = async (req, res, next) => {
   const posts = await Post.find().populate('comments').populate('author');
@@ -108,13 +109,28 @@ exports.postIdDEL = async (req, res, next) => {
 };
 
 exports.commentGET = (req, res, next) => {
-  res.json(`GET - Moderator comment page ${req.params.postId}/${req.params.commentId}`);
+  res.json(`GET - Moderator comment ${req.params.id}/${req.params.commentId}`);
 };
 
-exports.commentPUT = (req, res, next) => {
-  res.json(`PUT - Moderator edit comment ${req.params.postId}/${req.params.commentId}`);
-};
+exports.commentPUT = [
+  body('content').notEmpty().trim().escape()
+    .withMessage('Input required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+      res.json({ content: req.body.content, errorsArray });
+    } else {
+      const comment = await Comment.findById(req.params.commentId);
+      comment.content = req.body.content;
+      await comment.save();
+      res.json(comment);
+    }
+  }),
+];
 
 exports.commentDEL = (req, res, next) => {
-  res.json(`DEL - Moderator delete comment ${req.params.postId}/${req.params.commentId}`);
+  res.json(`DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`);
 };
