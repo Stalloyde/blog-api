@@ -11,10 +11,6 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
 
-exports.homeGET = (req, res, next) => {
-  res.json('Hello!');
-};
-
 exports.signupGET = (req, res, next) => {
   res.json('GET - Signup page');
 };
