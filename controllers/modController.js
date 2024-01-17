@@ -12,7 +12,7 @@ const Post = require('../models/post');
 const Comment = require('../models/comment');
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find().populate('comments').populate('author');
+  const posts = await Post.find().populate('comments').populate('author', 'username');
   res.json(posts);
 };
 
@@ -57,7 +57,7 @@ exports.postPOST = [
 ];
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.id).populate('comments').populate('author');
+  const post = await Post.findById(req.params.id).populate('comments').populate('author', 'username');
   res.json(post);
 };
 
@@ -101,7 +101,7 @@ exports.postPUTComment = [
       const errorsArray = errors.array();
       res.json({ content: req.body.content, errorsArray });
     } else {
-      const post = await Post.findById(req.params.id).populate('comments').populate('author');
+      const post = await Post.findById(req.params.id).populate('comments').populate('author', 'username');
       post.content = req.body.content;
 
       // has image file. Need to make file upload on the frontend has a persistent file, like edit inputs
