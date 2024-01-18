@@ -10,7 +10,7 @@ router.post('/login', indexController.loginPOST);
 router.get('/signup', indexController.signupGET);
 router.post('/signup', indexController.signupPOST);
 router.get('/posts', indexController.postGET);
-router.get('/posts/:id', passport.authenticate('jwt', { session: false }), indexController.postIdGET);
+router.get('/posts/:id', indexController.postIdGET);
 router.post('/posts/:id', passport.authenticate('jwt', { session: false }), indexController.postPOSTComment);
 
 module.exports = router;
