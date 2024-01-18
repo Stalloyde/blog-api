@@ -24,7 +24,7 @@ const postSchema = new Schema({
 });
 
 postSchema.virtual('postDateFormatted').get(function () {
-  return DateTime.fromJSDate(this.datePosted).toLocaleString(DateTime.DATE_MED);
+  return DateTime.fromJSDate(this.date).toLocaleString(DateTime.DATE_MED);
 });
 
 module.exports = mongoose.model('Post', postSchema);
