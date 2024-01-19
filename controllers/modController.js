@@ -12,15 +12,16 @@ const Post = require('../models/post');
 const Comment = require('../models/comment');
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find().populate('comments').populate('author', 'username');
+  const posts = await Post.find()
+    .populate({ path: 'comments', populate: { path: 'author' } })
+    .populate('author', 'username')
+    .sort({ date: -1 });
   res.json(posts);
 };
 
 exports.postPOST = [
-  body('title').notEmpty().trim().escape()
-    .withMessage('Input required'),
-  body('content').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('title').notEmpty().trim().escape().withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
@@ -29,7 +30,11 @@ exports.postPOST = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json({ title: req.body.title, content: req.body.content, errorsArray });
+      res.json({
+        title: req.body.title,
+        content: req.body.content,
+        errorsArray,
+      });
     } else {
       const newPost = new Post({
         author,
@@ -57,19 +62,25 @@ exports.postPOST = [
 ];
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.id).populate('comments').populate('author', 'username');
+  const post = await Post.findById(req.params.id)
+    .populate({
+      path: 'comments',
+      populate: { path: 'author' },
+      options: { sort: { date: -1 } },
+    })
+    .populate('author', 'username');
   res.json(post);
 };
 
 exports.postPOSTComment = [
-  body('content').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
-    const [author, post] = await Promise.all(
-      [User.findById(currentUser.user._id), Post.findById(req.params.id)],
-    );
+    const [author, post] = await Promise.all([
+      User.findById(currentUser.user._id),
+      Post.findById(req.params.id),
+    ]);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -91,8 +102,7 @@ exports.postPOSTComment = [
 ];
 
 exports.postPUTComment = [
-  body('content').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -101,7 +111,9 @@ exports.postPUTComment = [
       const errorsArray = errors.array();
       res.json({ content: req.body.content, errorsArray });
     } else {
-      const post = await Post.findById(req.params.id).populate('comments').populate('author', 'username');
+      const post = await Post.findById(req.params.id)
+        .populate({ path: 'comments', populate: { path: 'author' } })
+        .populate('author', 'username');
       post.content = req.body.content;
 
       // has image file. Need to make file upload on the frontend has a persistent file, like edit inputs
@@ -119,7 +131,8 @@ exports.postPUTComment = [
       await post.save();
       res.json(post);
     }
-  })];
+  }),
+];
 
 exports.postDELComment = async (req, res, next) => {
   await Post.deleteOne({ _id: req.params.id });
@@ -132,8 +145,7 @@ exports.commentGET = async (req, res, next) => {
 };
 
 exports.commentPUT = [
-  body('content').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -152,5 +164,7 @@ exports.commentPUT = [
 
 exports.commentDEL = async (req, res, next) => {
   await Comment.findByIdAndDelete(req.params.commentId);
-  res.json(`DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`);
+  res.json(
+    `DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`,
+  );
 };

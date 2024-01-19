@@ -16,11 +16,12 @@ exports.signupGET = (req, res, next) => {
 };
 
 exports.signupPOST = [
-  body('username').notEmpty().trim().escape()
-    .withMessage('Input required'),
-  body('password').notEmpty().trim().escape()
-    .withMessage('Input required'),
-  body('confirmPassword').notEmpty().trim().custom((value, { req }) => value === req.body.password)
+  body('username').notEmpty().trim().escape().withMessage('Input required'),
+  body('password').notEmpty().trim().escape().withMessage('Input required'),
+  body('confirmPassword')
+    .notEmpty()
+    .trim()
+    .custom((value, { req }) => value === req.body.password)
     .escape()
     .withMessage('Passwords do not match'),
 
@@ -42,7 +43,9 @@ exports.signupPOST = [
       const checkDuplicate = await User.findOne({ username });
 
       if (checkDuplicate) {
-        res.json(username, { duplicateError: 'Username has been taken. Try another.' });
+        res.json(username, {
+          duplicateError: 'Username has been taken. Try another.',
+        });
       }
 
       try {
@@ -62,10 +65,8 @@ exports.loginGET = (req, res, next) => {
 };
 
 exports.loginPOST = [
-  body('username').notEmpty().trim().escape()
-    .withMessage('Input required'),
-  body('password').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('username').notEmpty().trim().escape().withMessage('Input required'),
+  body('password').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -84,36 +85,51 @@ exports.loginPOST = [
         res.json('Wrong password');
       }
 
-      jwt.sign({ user }, process.env.SECRET, { expiresIn: '1h', algorithm: 'HS256' }, (err, token) => {
-        if (err) {
-          throw Error(err);
-        } else {
-          res.json({ user, Bearer: `Bearer ${token}` });
-        }
-      });
+      jwt.sign(
+        { user },
+        process.env.SECRET,
+        { expiresIn: '1h', algorithm: 'HS256' },
+        (err, token) => {
+          if (err) {
+            throw Error(err);
+          } else {
+            res.json({ user, Bearer: `Bearer ${token}` });
+          }
+        },
+      );
     }
   }),
 ];
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find().populate('comments').populate('author', 'username');
+  const posts = await Post.find()
+    .populate({ path: 'comments', populate: { path: 'author' } })
+    .populate('author', 'username')
+    .sort({ date: -1 });
   res.json(posts);
 };
 
 exports.postIdGET = async (req, res, next) => {
-  const post = await Post.findById(req.params.id).populate('comments').populate('author', 'username');
+  const post = await Post.findById(req.params.id)
+    .populate({
+      path: 'comments',
+      populate: { path: 'author' },
+      options: { sort: { date: -1 } },
+    })
+    .populate('author', 'username');
+  console.log(post);
   res.json(post);
 };
 
 exports.postPOSTComment = [
-  body('content').notEmpty().trim().escape()
-    .withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
-    const [author, post] = await Promise.all(
-      [User.findById(currentUser.user._id), Post.findById(req.params.id)],
-    );
+    const [author, post] = await Promise.all([
+      User.findById(currentUser.user._id),
+      Post.findById(req.params.id),
+    ]);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
