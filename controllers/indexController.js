@@ -16,8 +16,8 @@ exports.signupGET = (req, res, next) => {
 };
 
 exports.signupPOST = [
-  body('username').notEmpty().trim().escape().withMessage('Input required'),
-  body('password').notEmpty().trim().escape().withMessage('Input required'),
+  body('username').notEmpty().trim().escape().withMessage('Username required'),
+  body('password').notEmpty().trim().escape().withMessage('Password required'),
   body('confirmPassword')
     .notEmpty()
     .trim()
@@ -26,6 +26,12 @@ exports.signupPOST = [
     .withMessage('Passwords do not match'),
 
   expressAsyncHandler(async (req, res, next) => {
+    const jsonResponses = {
+      usernameError: null,
+      passwordError: null,
+      confirmPasswordError: null,
+    };
+
     const errors = validationResult(req);
 
     const newUser = new User({
@@ -38,21 +44,31 @@ exports.signupPOST = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json(username, errorsArray);
+
+      errorsArray.forEach((error) => {
+        if (error.path === 'username') {
+          jsonResponses.usernameError = `*${error.msg}`;
+        } else if (error.path === 'password') {
+          jsonResponses.passwordError = `*${error.msg}`;
+        } else {
+          jsonResponses.confirmPasswordError = `*${error.msg}`;
+        }
+      });
+      res.json(jsonResponses);
     } else {
-      const checkDuplicate = await User.findOne({ username });
-
-      if (checkDuplicate) {
-        res.json(username, {
-          duplicateError: 'Username has been taken. Try another.',
-        });
-      }
-
       try {
+        const checkDuplicate = await User.findOne({ username });
+
+        if (checkDuplicate) {
+          jsonResponses.usernameError =
+            '*Username has been taken. Try another.';
+          res.json(jsonResponses);
+        }
+
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         newUser.password = hashedPassword;
         // await newUser.save();
-        res.json(newUser);
+        res.json('Sign up successful!');
       } catch (err) {
         return next(err);
       }
@@ -65,24 +81,38 @@ exports.loginGET = (req, res, next) => {
 };
 
 exports.loginPOST = [
-  body('username').notEmpty().trim().escape().withMessage('Input required'),
-  body('password').notEmpty().trim().escape().withMessage('Input required'),
+  body('username').notEmpty().trim().escape().withMessage('Username required'),
+  body('password').notEmpty().trim().escape().withMessage('Password required'),
 
   expressAsyncHandler(async (req, res, next) => {
+    const jsonResponses = {
+      usernameError: null,
+      passwordError: null,
+    };
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json(errorsArray);
+
+      errorsArray.forEach((error) => {
+        if (error.path === 'username') {
+          jsonResponses.usernameError = `*${error.msg}`;
+        } else {
+          jsonResponses.passwordError = `*${error.msg}`;
+        }
+      });
+      res.json(jsonResponses);
     } else {
       const user = await User.findOne({ username: req.body.username });
       if (!user) {
-        res.json('User not found');
+        jsonResponses.usernameError = '*User not found';
+        res.json(jsonResponses);
       }
 
       const match = await bcrypt.compare(req.body.password, user.password);
       if (!match) {
-        res.json('Wrong password');
+        jsonResponses.passwordError = '*Incorrect password';
+        res.json(jsonResponses);
       }
 
       jwt.sign(
@@ -93,7 +123,8 @@ exports.loginPOST = [
           if (err) {
             throw Error(err);
           } else {
-            res.json({ user, Bearer: `Bearer ${token}` });
+            const { username, isMod } = user;
+            res.json({ username, isMod, Bearer: `Bearer ${token}` });
           }
         },
       );
@@ -117,28 +148,31 @@ exports.postIdGET = async (req, res, next) => {
       options: { sort: { date: -1 } },
     })
     .populate('author', 'username');
-  console.log(post);
   res.json(post);
 };
 
 exports.postPOSTComment = [
-  body('content').notEmpty().trim().escape().withMessage('Input required'),
+  body('newComment').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
     const [author, post] = await Promise.all([
       User.findById(currentUser.user._id),
-      Post.findById(req.params.id),
+      Post.findById(req.params.id)
+        .populate('author', 'username')
+        .populate({
+          path: 'comments',
+          populate: { path: 'author', select: 'username', select: 'isMod' },
+        }),
     ]);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const errorsArray = errors.array();
-      res.json(errorsArray);
+      res.json(errors);
     } else {
       const newComment = new Comment({
         author,
-        content: req.body.content,
+        content: req.body.newComment,
         date: new Date(),
       });
 
