@@ -134,7 +134,10 @@ exports.loginPOST = [
 
 exports.postGET = async (req, res, next) => {
   const posts = await Post.find()
-    .populate({ path: 'comments', populate: { path: 'author' } })
+    .populate({
+      path: 'comments',
+      populate: { path: 'author', select: ['username', 'isMod'] },
+    })
     .populate('author', 'username')
     .sort({ date: -1 });
   res.json(posts);
@@ -144,7 +147,7 @@ exports.postIdGET = async (req, res, next) => {
   const post = await Post.findById(req.params.id)
     .populate({
       path: 'comments',
-      populate: { path: 'author' },
+      populate: { path: 'author', select: ['username', 'isMod'] },
       options: { sort: { date: -1 } },
     })
     .populate('author', 'username');
@@ -162,7 +165,7 @@ exports.postPOSTComment = [
         .populate('author', 'username')
         .populate({
           path: 'comments',
-          populate: { path: 'author', select: 'username', select: 'isMod' },
+          populate: { path: 'author', select: ['username', 'isMod'] },
         }),
     ]);
     const errors = validationResult(req);
