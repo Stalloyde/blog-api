@@ -11,12 +11,70 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
 
+//add loginPOST.. similar to indexControllers' but with isMod validation check
+exports.loginPOST = [
+  body('username').notEmpty().trim().escape().withMessage('Username required'),
+  body('password').notEmpty().trim().escape().withMessage('Password required'),
+
+  expressAsyncHandler(async (req, res, next) => {
+    const jsonResponses = {
+      usernameError: null,
+      passwordError: null,
+    };
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const errorsArray = errors.array();
+
+      errorsArray.forEach((error) => {
+        if (error.path === 'username') {
+          jsonResponses.usernameError = `*${error.msg}`;
+        } else {
+          jsonResponses.passwordError = `*${error.msg}`;
+        }
+      });
+      return res.json(jsonResponses);
+    } else {
+      const user = await User.findOne({ username: req.body.username });
+      if (!user) {
+        jsonResponses.usernameError = '*User not found';
+        return res.json(jsonResponses);
+      }
+
+      if (user.isMod === false) {
+        jsonResponses.usernameError = '*User is not a moderator';
+        return res.json(jsonResponses);
+      }
+
+      const match = await bcrypt.compare(req.body.password, user.password);
+      if (!match) {
+        jsonResponses.passwordError = '*Incorrect password';
+        return res.json(jsonResponses);
+      }
+
+      jwt.sign(
+        { user },
+        process.env.SECRET,
+        { expiresIn: '1h', algorithm: 'HS256' },
+        (err, token) => {
+          if (err) {
+            throw Error(err);
+          } else {
+            const { username, isMod } = user;
+            return res.json({ username, isMod, Bearer: `Bearer ${token}` });
+          }
+        },
+      );
+    }
+  }),
+];
+
 exports.postGET = async (req, res, next) => {
   const posts = await Post.find()
     .populate({ path: 'comments', populate: { path: 'author' } })
     .populate('author', 'username')
     .sort({ date: -1 });
-  res.json(posts);
+  return res.json(posts);
 };
 
 exports.postPOST = [
@@ -56,7 +114,7 @@ exports.postPOST = [
         newPost.image.size = req.file.size;
       }
       await newPost.save();
-      res.json(newPost);
+      return res.json(newPost);
     }
   }),
 ];
@@ -69,7 +127,7 @@ exports.postIdGET = async (req, res, next) => {
       options: { sort: { date: -1 } },
     })
     .populate('author', 'username');
-  res.json(post);
+  return res.json(post);
 };
 
 exports.postPOSTComment = [
@@ -85,7 +143,7 @@ exports.postPOSTComment = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json(errorsArray);
+      return res.json(errorsArray);
     } else {
       const newComment = new Comment({
         author,
@@ -96,7 +154,7 @@ exports.postPOSTComment = [
       await newComment.save();
       post.comments.push(newComment);
       await post.save();
-      res.json(newComment);
+      return res.json(newComment);
     }
   }),
 ];
@@ -109,7 +167,7 @@ exports.postPUTComment = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json({ content: req.body.content, errorsArray });
+      return res.json({ content: req.body.content, errorsArray });
     } else {
       const post = await Post.findById(req.params.id)
         .populate({ path: 'comments', populate: { path: 'author' } })
@@ -129,19 +187,19 @@ exports.postPUTComment = [
       }
 
       await post.save();
-      res.json(post);
+      return res.json(post);
     }
   }),
 ];
 
 exports.postDELComment = async (req, res, next) => {
   await Post.deleteOne({ _id: req.params.id });
-  res.json(`DEL - Moderator delete post ${req.params.id}`);
+  return res.json(`DEL - Moderator delete post ${req.params.id}`);
 };
 
 exports.commentGET = async (req, res, next) => {
   const comment = await Comment.findById(req.params.commentId);
-  res.json(comment);
+  return res.json(comment);
 };
 
 exports.commentPUT = [
@@ -152,19 +210,19 @@ exports.commentPUT = [
 
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
-      res.json({ content: req.body.content, errorsArray });
+      return res.json({ content: req.body.content, errorsArray });
     } else {
       const comment = await Comment.findById(req.params.commentId);
       comment.content = req.body.content;
       await comment.save();
-      res.json(comment);
+      return res.json(comment);
     }
   }),
 ];
 
 exports.commentDEL = async (req, res, next) => {
   await Comment.findByIdAndDelete(req.params.commentId);
-  res.json(
+  return res.json(
     `DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`,
   );
 };
