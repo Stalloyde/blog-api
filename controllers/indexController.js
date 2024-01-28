@@ -54,7 +54,7 @@ exports.signupPOST = [
           jsonResponses.confirmPasswordError = `*${error.msg}`;
         }
       });
-      res.json(jsonResponses);
+      return res.json(jsonResponses);
     } else {
       try {
         const checkDuplicate = await User.findOne({ username });
@@ -62,13 +62,13 @@ exports.signupPOST = [
         if (checkDuplicate) {
           jsonResponses.usernameError =
             '*Username has been taken. Try another.';
-          res.json(jsonResponses);
+          return res.json(jsonResponses);
         }
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         newUser.password = hashedPassword;
-        // await newUser.save();
-        res.json('Sign up successful!');
+        await newUser.save();
+        return res.json('Sign up successful!');
       } catch (err) {
         return next(err);
       }
@@ -101,18 +101,18 @@ exports.loginPOST = [
           jsonResponses.passwordError = `*${error.msg}`;
         }
       });
-      res.json(jsonResponses);
+      return res.json(jsonResponses);
     } else {
       const user = await User.findOne({ username: req.body.username });
       if (!user) {
         jsonResponses.usernameError = '*User not found';
-        res.json(jsonResponses);
+        return res.json(jsonResponses);
       }
 
       const match = await bcrypt.compare(req.body.password, user.password);
       if (!match) {
         jsonResponses.passwordError = '*Incorrect password';
-        res.json(jsonResponses);
+        return res.json(jsonResponses);
       }
 
       jwt.sign(
@@ -124,7 +124,7 @@ exports.loginPOST = [
             throw Error(err);
           } else {
             const { username, isMod } = user;
-            res.json({ username, isMod, Bearer: `Bearer ${token}` });
+            return res.json({ username, isMod, Bearer: `Bearer ${token}` });
           }
         },
       );
@@ -140,7 +140,7 @@ exports.postGET = async (req, res, next) => {
     })
     .populate('author', 'username')
     .sort({ date: -1 });
-  res.json(posts);
+  return res.json(posts);
 };
 
 exports.postIdGET = async (req, res, next) => {
@@ -151,7 +151,7 @@ exports.postIdGET = async (req, res, next) => {
       options: { sort: { date: -1 } },
     })
     .populate('author', 'username');
-  res.json(post);
+  return res.json(post);
 };
 
 exports.postPOSTComment = [
@@ -171,7 +171,7 @@ exports.postPOSTComment = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.json(errors);
+      return res.json(errors);
     } else {
       const newComment = new Comment({
         author,
@@ -182,7 +182,7 @@ exports.postPOSTComment = [
       await newComment.save();
       post.comments.push(newComment);
       await post.save();
-      res.json(post);
+      return res.json(post);
     }
   }),
 ];
