@@ -21,6 +21,13 @@ router.post(
   modController.postPOST,
 );
 
+router.delete(
+  '/posts',
+  passport.authenticate('jwt', { session: false }),
+  isMod,
+  modController.postDEL,
+);
+
 router.get(
   '/posts/:id',
   passport.authenticate('jwt', { session: false }),
