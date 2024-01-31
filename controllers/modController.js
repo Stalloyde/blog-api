@@ -11,7 +11,6 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
 
-//add loginPOST.. similar to indexControllers' but with isMod validation check
 exports.loginPOST = [
   body('username').notEmpty().trim().escape().withMessage('Username required'),
   body('password').notEmpty().trim().escape().withMessage('Password required'),
@@ -99,7 +98,7 @@ exports.postPOST = [
         title: req.body.title,
         content: req.body.content,
         date: new Date(),
-        isPublished: true,
+        isPublished: true, //adjust this to depend on input
       });
 
       // has image file
@@ -119,6 +118,17 @@ exports.postPOST = [
   }),
 ];
 
+exports.postDEL = async (req, res, next) => {
+  const targetPost = await Post.findByIdAndDelete(
+    req.body.targetPostId,
+  ).populate('comments');
+  const comments = targetPost.comments;
+  const commentIds = comments.map((comment) => comment._id);
+  await Comment.deleteMany({ _id: commentIds });
+  const posts = await Post.find();
+  return res.json(posts);
+};
+
 exports.postIdGET = async (req, res, next) => {
   const post = await Post.findById(req.params.id)
     .populate({
@@ -131,30 +141,34 @@ exports.postIdGET = async (req, res, next) => {
 };
 
 exports.postPOSTComment = [
-  body('content').notEmpty().trim().escape().withMessage('Input required'),
+  body('newComment').notEmpty().trim().escape().withMessage('Input required'),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
     const [author, post] = await Promise.all([
       User.findById(currentUser.user._id),
-      Post.findById(req.params.id),
+      Post.findById(req.params.id)
+        .populate('author', 'username')
+        .populate({
+          path: 'comments',
+          populate: { path: 'author', select: ['username', 'isMod'] },
+        }),
     ]);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const errorsArray = errors.array();
-      return res.json(errorsArray);
+      return res.json(errors);
     } else {
       const newComment = new Comment({
         author,
-        content: req.body.content,
+        content: req.body.newComment,
         date: new Date(),
       });
 
       await newComment.save();
       post.comments.push(newComment);
       await post.save();
-      return res.json(newComment);
+      return res.json(post);
     }
   }),
 ];
