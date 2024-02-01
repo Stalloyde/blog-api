@@ -119,16 +119,18 @@ exports.postPOST = [
   }),
 ];
 
-exports.postDEL = async (req, res, next) => {
-  const targetPost = await Post.findByIdAndDelete(
-    req.body.targetPostId,
-  ).populate('comments');
-  const comments = targetPost.comments;
-  const commentIds = comments.map((comment) => comment._id);
-  await Comment.deleteMany({ _id: commentIds });
-  const posts = await Post.find();
-  return res.json(posts);
-};
+exports.postDEL = [
+  expressAsyncHandler(async (req, res, next) => {
+    const targetPost = await Post.findByIdAndDelete(
+      req.body.targetPostId,
+    ).populate('comments');
+    const comments = targetPost.comments;
+    const commentIds = comments.map((comment) => comment._id);
+    await Comment.deleteMany({ _id: commentIds });
+    const posts = await Post.find();
+    return res.json(posts);
+  }),
+];
 
 exports.postIdGET = async (req, res, next) => {
   const post = await Post.findById(req.params.id)
@@ -207,10 +209,25 @@ exports.postPUTComment = [
   }),
 ];
 
-exports.postDELComment = async (req, res, next) => {
-  await Post.deleteOne({ _id: req.params.id });
-  return res.json(`DEL - Moderator delete post ${req.params.id}`);
-};
+exports.postDELComment = [
+  expressAsyncHandler(async (req, res, next) => {
+    const commentObjectId = new mongoose.Types.ObjectId(req.body.commentId);
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { comments: commentObjectId } },
+      { new: true },
+    ).populate({
+      path: 'comments',
+      populate: { path: 'author' },
+      options: { sort: { date: -1 } },
+    });
+
+    await Comment.findByIdAndDelete(commentObjectId);
+    await updatedPost.save();
+    return res.json(updatedPost);
+  }),
+];
 
 exports.commentGET = async (req, res, next) => {
   const comment = await Comment.findById(req.params.commentId);
