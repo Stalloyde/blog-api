@@ -79,6 +79,7 @@ exports.postGET = async (req, res, next) => {
 exports.postPOST = [
   body('title').notEmpty().trim().escape().withMessage('Input required'),
   body('content').notEmpty().trim().escape().withMessage('Input required'),
+  body('toPublish').escape(),
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
@@ -98,7 +99,7 @@ exports.postPOST = [
         title: req.body.title,
         content: req.body.content,
         date: new Date(),
-        isPublished: true, //adjust this to depend on input
+        isPublished: req.body.toPublish,
       });
 
       // has image file
