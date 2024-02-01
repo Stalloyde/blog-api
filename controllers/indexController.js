@@ -133,7 +133,7 @@ exports.loginPOST = [
 ];
 
 exports.postGET = async (req, res, next) => {
-  const posts = await Post.find()
+  const posts = await Post.find({ isPublished: true })
     .populate({
       path: 'comments',
       populate: { path: 'author', select: ['username', 'isMod'] },
