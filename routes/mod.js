@@ -21,6 +21,13 @@ router.post(
   modController.postPOST,
 );
 
+router.put(
+  '/posts',
+  passport.authenticate('jwt', { session: false }),
+  isMod,
+  modController.postPUT,
+);
+
 router.delete(
   '/posts',
   passport.authenticate('jwt', { session: false }),
@@ -54,27 +61,6 @@ router.delete(
   passport.authenticate('jwt', { session: false }),
   isMod,
   modController.postDELComment,
-);
-
-router.get(
-  '/posts/:id/:commentId',
-  passport.authenticate('jwt', { session: false }),
-  isMod,
-  modController.commentGET,
-);
-
-router.put(
-  '/posts/:id/:commentId',
-  passport.authenticate('jwt', { session: false }),
-  isMod,
-  modController.commentPUT,
-);
-
-router.delete(
-  '/posts/:id/:commentId',
-  passport.authenticate('jwt', { session: false }),
-  isMod,
-  modController.commentDEL,
 );
 
 module.exports = router;

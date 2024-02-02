@@ -132,6 +132,47 @@ exports.postDEL = [
   }),
 ];
 
+exports.postPUT = [
+  body('title').notEmpty().trim().escape().withMessage('Input required'),
+  body('content').notEmpty().trim().escape().withMessage('Input required'),
+  body('toPublish').escape(),
+
+  expressAsyncHandler(async (req, res, next) => {
+    console.log('asdasd');
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.json({
+        title: req.body.title,
+        content: req.body.content,
+        isPublished: req.body.toPublish,
+        errors,
+      });
+    } else {
+      const postObjectId = new mongoose.Types.ObjectId(req.body.editId);
+      const updatedPost = await Post.findByIdAndUpdate(postObjectId, {
+        title: req.body.title,
+        content: req.body.content,
+        isPublished: req.body.toPublish,
+      });
+
+      // has image file
+      if (req.file) {
+        updatedPost.image.fieldname = req.file.fieldname;
+        updatedPost.image.originalname = req.file.originalname;
+        updatedPost.image.encoding = req.file.encoding;
+        updatedPost.image.mimetype = req.filemimetype;
+        updatedPost.image.destination = req.file.destination;
+        updatedPost.image.filename = req.filefilename;
+        updatedPost.image.path = req.file.path;
+        updatedPost.image.size = req.file.size;
+      }
+      await updatedPost.save();
+      return res.json(updatedPost);
+    }
+  }),
+];
+
 exports.postIdGET = async (req, res, next) => {
   const post = await Post.findById(req.params.id)
     .populate({
@@ -228,33 +269,3 @@ exports.postDELComment = [
     return res.json(updatedPost);
   }),
 ];
-
-exports.commentGET = async (req, res, next) => {
-  const comment = await Comment.findById(req.params.commentId);
-  return res.json(comment);
-};
-
-exports.commentPUT = [
-  body('content').notEmpty().trim().escape().withMessage('Input required'),
-
-  expressAsyncHandler(async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      const errorsArray = errors.array();
-      return res.json({ content: req.body.content, errorsArray });
-    } else {
-      const comment = await Comment.findById(req.params.commentId);
-      comment.content = req.body.content;
-      await comment.save();
-      return res.json(comment);
-    }
-  }),
-];
-
-exports.commentDEL = async (req, res, next) => {
-  await Comment.findByIdAndDelete(req.params.commentId);
-  return res.json(
-    `DEL - Moderator delete comment ${req.params.id}/${req.params.commentId}`,
-  );
-};
