@@ -4,17 +4,7 @@ const { DateTime } = require('luxon');
 const { Schema } = mongoose;
 
 const postSchema = new Schema({
-  image: {
-    fieldname: String,
-    originalname: String,
-    encoding: String,
-    mimetype: String,
-    destination: String,
-    filename: String,
-    path: String,
-    size: Number,
-  },
-
+  image: { type: Object },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   title: { type: String, required: true },
   content: { type: String, required: true },

@@ -10,6 +10,7 @@ const dbConnection = require('../config/db');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
+const uploadImage = require('../config/cloudinary');
 
 exports.loginPOST = [
   body('username').notEmpty().trim().escape().withMessage('Username required'),
@@ -83,7 +84,10 @@ exports.postPOST = [
 
   expressAsyncHandler(async (req, res, next) => {
     const currentUser = req.user;
-    const author = await User.findById(currentUser.user._id);
+    const author = await User.findById(currentUser.user).select([
+      'username',
+      'isMod',
+    ]);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -98,21 +102,11 @@ exports.postPOST = [
         author,
         title: req.body.title,
         content: req.body.content,
+        image: await uploadImage(req.file.path),
         date: new Date(),
         isPublished: req.body.toPublish,
       });
 
-      // has image file
-      if (req.file) {
-        newPost.image.fieldname = req.file.fieldname;
-        newPost.image.originalname = req.file.originalname;
-        newPost.image.encoding = req.file.encoding;
-        newPost.image.mimetype = req.filemimetype;
-        newPost.image.destination = req.file.destination;
-        newPost.image.filename = req.filefilename;
-        newPost.image.path = req.file.path;
-        newPost.image.size = req.file.size;
-      }
       await newPost.save();
       return res.json(newPost);
     }
@@ -138,7 +132,6 @@ exports.postPUT = [
   body('toPublish').escape(),
 
   expressAsyncHandler(async (req, res, next) => {
-    console.log('asdasd');
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -146,7 +139,6 @@ exports.postPUT = [
         title: req.body.title,
         content: req.body.content,
         isPublished: req.body.toPublish,
-        errors,
       });
     } else {
       const postObjectId = new mongoose.Types.ObjectId(req.body.editId);
@@ -156,17 +148,10 @@ exports.postPUT = [
         isPublished: req.body.toPublish,
       });
 
-      // has image file
       if (req.file) {
-        updatedPost.image.fieldname = req.file.fieldname;
-        updatedPost.image.originalname = req.file.originalname;
-        updatedPost.image.encoding = req.file.encoding;
-        updatedPost.image.mimetype = req.filemimetype;
-        updatedPost.image.destination = req.file.destination;
-        updatedPost.image.filename = req.filefilename;
-        updatedPost.image.path = req.file.path;
-        updatedPost.image.size = req.file.size;
+        updatedPost.image = await uploadImage(req.file.path);
       }
+
       await updatedPost.save();
       return res.json(updatedPost);
     }
@@ -231,18 +216,6 @@ exports.postPUTComment = [
         .populate({ path: 'comments', populate: { path: 'author' } })
         .populate('author', 'username');
       post.content = req.body.content;
-
-      // has image file. Need to make file upload on the frontend has a persistent file, like edit inputs
-      if (req.file) {
-        post.image.fieldname = req.file.fieldname;
-        post.image.originalname = req.file.originalname;
-        post.image.encoding = req.file.encoding;
-        post.image.mimetype = req.filemimetype;
-        post.image.destination = req.file.destination;
-        post.image.filename = req.filefilename;
-        post.image.path = req.file.path;
-        post.image.size = req.file.size;
-      }
 
       await post.save();
       return res.json(post);
