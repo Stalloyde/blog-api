@@ -10,6 +10,7 @@ const dbConnection = require('../config/db');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
+const he = require('he');
 
 exports.signupGET = (req, res, next) => {
   res.json('GET - Signup page');
@@ -175,7 +176,7 @@ exports.postPOSTComment = [
     } else {
       const newComment = new Comment({
         author,
-        content: req.body.newComment,
+        content: he.decode(req.body.newComment),
         date: new Date(),
       });
 

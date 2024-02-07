@@ -11,6 +11,7 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
 const uploadImage = require('../config/cloudinary');
+const he = require('he');
 
 exports.loginPOST = [
   body('username').notEmpty().trim().escape().withMessage('Username required'),
@@ -93,15 +94,15 @@ exports.postPOST = [
     if (!errors.isEmpty()) {
       const errorsArray = errors.array();
       res.json({
-        title: req.body.title,
-        content: req.body.content,
+        title: he.decode(req.body.title),
+        content: he.decode(req.body.content),
         errorsArray,
       });
     } else {
       const newPost = new Post({
         author,
-        title: req.body.title,
-        content: req.body.content,
+        title: he.decode(req.body.title),
+        content: he.decode(req.body.content),
         image: await uploadImage(req.file.path),
         date: new Date(),
         isPublished: req.body.toPublish,
@@ -136,15 +137,15 @@ exports.postPUT = [
 
     if (!errors.isEmpty()) {
       res.json({
-        title: req.body.title,
-        content: req.body.content,
+        title: he.decode(req.body.title),
+        content: he.decode(req.body.content),
         isPublished: req.body.toPublish,
       });
     } else {
       const postObjectId = new mongoose.Types.ObjectId(req.body.editId);
       const updatedPost = await Post.findByIdAndUpdate(postObjectId, {
-        title: req.body.title,
-        content: req.body.content,
+        title: he.decode(req.body.title),
+        content: he.decode(req.body.content),
         isPublished: req.body.toPublish,
       });
 
