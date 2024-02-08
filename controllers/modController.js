@@ -191,7 +191,7 @@ exports.postPOSTComment = [
     } else {
       const newComment = new Comment({
         author,
-        content: req.body.newComment,
+        content: he.decode(req.body.newComment),
         date: new Date(),
       });
 
