@@ -17,7 +17,7 @@ router.post(
   passport.authenticate('jwt', { session: false }),
   indexController.postPOSTComment,
 );
-router.get('*', (req, res) => {
+router.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', '../public/index.html'));
 });
 
