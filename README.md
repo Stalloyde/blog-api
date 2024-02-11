@@ -1,4 +1,4 @@
-LINK TO LIVE APP: https://blogapi-client-stalloyde.fly.dev/posts
+LINK TO LIVE APP: https://blogapi-client-stalloyde.fly.dev
 
 This is the repo of the back-end server of a full-stack blog site developed using the following technologies:
 Front-end: React + Typescript
