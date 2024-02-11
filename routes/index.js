@@ -5,9 +5,6 @@ const indexController = require('../controllers/indexController');
 const router = express.Router();
 
 /* GET home page. */
-router.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
 router.get('/login', indexController.loginGET);
 router.post('/login', indexController.loginPOST);
 router.get('/signup', indexController.signupGET);
