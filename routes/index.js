@@ -5,6 +5,7 @@ const indexController = require('../controllers/indexController');
 const router = express.Router();
 
 /* GET home page. */
+
 router.get('/login', indexController.loginGET);
 router.post('/login', indexController.loginPOST);
 router.get('/signup', indexController.signupGET);
@@ -16,5 +17,8 @@ router.post(
   passport.authenticate('jwt', { session: false }),
   indexController.postPOSTComment,
 );
+router.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', '../public/index.html'));
+});
 
 module.exports = router;
