@@ -6,7 +6,6 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const dbConnection = require('../config/db');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');

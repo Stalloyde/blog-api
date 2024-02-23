@@ -1,3 +1,4 @@
+require('./config/db');
 require('./config/passport');
 const express = require('express');
 const path = require('path');
