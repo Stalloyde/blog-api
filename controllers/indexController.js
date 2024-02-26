@@ -11,8 +11,8 @@ const Post = require('../models/post');
 const Comment = require('../models/comment');
 const he = require('he');
 
-exports.signupGET = (req, res, next) => {
-  res.json('GET - Signup page');
+exports.signupGET = async (req, res, next) => {
+  res.send('GET - Signup page');
 };
 
 exports.signupPOST = [
@@ -33,13 +33,11 @@ exports.signupPOST = [
     };
 
     const errors = validationResult(req);
-
     const newUser = new User({
       username: req.body.username,
       password: req.body.password,
       isMod: false,
     });
-
     const { username } = newUser;
 
     if (!errors.isEmpty()) {
@@ -68,7 +66,7 @@ exports.signupPOST = [
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         newUser.password = hashedPassword;
         await newUser.save();
-        return res.json('Sign up successful!');
+        return res.send('Sign up successful!');
       } catch (err) {
         return next(err);
       }
@@ -77,7 +75,7 @@ exports.signupPOST = [
 ];
 
 exports.loginGET = (req, res, next) => {
-  res.json('GET - Login page');
+  res.send('GET - Login page');
 };
 
 exports.loginPOST = [
