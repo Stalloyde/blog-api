@@ -3,7 +3,7 @@ const indexRouter = require('../routes/index');
 const mongoose = require('mongoose');
 const request = require('supertest');
 const testMongoDb = require('../config/testDb');
-const User = require('../models/user');
+const Post = require('../models/post');
 
 const app = express();
 app.use(express.json());
@@ -22,7 +22,7 @@ afterAll(async () => {
 });
 
 describe('sign up routes', () => {
-  test('signup post route', async () => {
+  test('POST signup - successful signup', async () => {
     await request(app)
       .post('/signup')
       .type('form')
@@ -30,7 +30,7 @@ describe('sign up routes', () => {
       .expect(200, 'Sign up successful!');
   });
 
-  test('signup post route - duplicate username', async () => {
+  test('POST signup - duplicate username', async () => {
     await request(app)
       .post('/signup')
       .type('form')
@@ -42,17 +42,21 @@ describe('sign up routes', () => {
       });
   });
 
-  test('signup post route - non-duplicate username', async () => {
+  test('POST signup - non-matching passwords', async () => {
     await request(app)
       .post('/signup')
       .type('form')
-      .send({ username: 'abcd', password: 'qwe', confirmPassword: 'qwe' })
-      .expect(200, 'Sign up successful!');
+      .send({ username: 'abcd', password: 'qwe', confirmPassword: 'qswe' })
+      .expect(200, {
+        usernameError: null,
+        passwordError: null,
+        confirmPasswordError: '*Passwords do not match',
+      });
   });
 });
 
 describe('login routes', () => {
-  test('login success', async () => {
+  test('POST login success', async () => {
     const response = await request(app)
       .post('/login')
       .type('form')
@@ -66,7 +70,7 @@ describe('login routes', () => {
     });
   });
 
-  test('login post route - wrong password', async () => {
+  test('POST login - wrong password', async () => {
     await request(app)
       .post('/login')
       .type('form')
@@ -77,7 +81,7 @@ describe('login routes', () => {
       });
   });
 
-  test('login post route - wrong username', async () => {
+  test('POST login - wrong username', async () => {
     await request(app)
       .post('/login')
       .type('form')
@@ -86,9 +90,26 @@ describe('login routes', () => {
   });
 });
 
-//   test('posts route', async () => {
-//     await request(app).get('/posts').expect('GET - Signup page');
-//   });
+describe('posts routes', () => {
+  test('GET all posts', async () => {
+    const posts = await Post.find({ isPublished: true }).populate({
+      path: 'comments',
+      populate: { path: 'author', select: ['username', 'isMod'] },
+    });
+    await request(app).get('/posts').expect(posts);
+  });
+
+  test('GET specific post', async () => {
+    const post = await Post.findById()
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: ['username', 'isMod'] },
+        options: { sort: { date: -1 } },
+      })
+      .populate('author', 'username');
+    await request(app).get('/posts').expect(post);
+  });
+});
 
 //   test('posts/:id route', async () => {
 //     await request(app).get('/posts/:id').expect('GET - Signup page');
