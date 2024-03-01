@@ -8,7 +8,7 @@ Database: MongoDB
 
 Here are the links to repos associated to this project:
 
-- API: https://github.com/Stalloyde/blog-api
+- CLIENT: https://github.com/Stalloyde/blogapi-client
 - CMS: https://github.com/Stalloyde/blogapi-cms
 
 All users are able to read blog posts. Login is required to post comments.
