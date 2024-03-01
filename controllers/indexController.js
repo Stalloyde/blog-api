@@ -36,8 +36,9 @@ exports.signupPOST = [
     const newUser = new User({
       username: req.body.username,
       password: req.body.password,
-      isMod: false,
+      isMod: req.body.isMod ? req.body.isMod : false,
     });
+
     const { username } = newUser;
 
     if (!errors.isEmpty()) {
@@ -106,7 +107,6 @@ exports.loginPOST = [
         jsonResponses.usernameError = '*User not found';
         return res.json(jsonResponses);
       }
-
       const match = await bcrypt.compare(req.body.password, user.password);
       if (!match) {
         jsonResponses.passwordError = '*Incorrect password';
@@ -176,7 +176,6 @@ exports.postPOSTComment = [
         content: he.decode(req.body.newComment),
         date: new Date(),
       });
-
       await newComment.save();
       post.comments.push(newComment);
       await post.save();
