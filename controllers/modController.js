@@ -102,11 +102,10 @@ exports.postPOST = [
         author,
         title: he.decode(req.body.title),
         content: he.decode(req.body.content),
-        image: await uploadImage(req.file.path),
+        image: req.file ? await uploadImage(req.file.path) : null,
         date: new Date(),
         isPublished: req.body.toPublish,
       });
-
       await newPost.save();
       return res.json(newPost);
     }
@@ -118,6 +117,7 @@ exports.postDEL = [
     const targetPost = await Post.findByIdAndDelete(
       req.body.targetPostId,
     ).populate('comments');
+
     const comments = targetPost.comments;
     const commentIds = comments.map((comment) => comment._id);
     await Comment.deleteMany({ _id: commentIds });
@@ -142,11 +142,15 @@ exports.postPUT = [
       });
     } else {
       const postObjectId = new mongoose.Types.ObjectId(req.body.editId);
-      const updatedPost = await Post.findByIdAndUpdate(postObjectId, {
-        title: he.decode(req.body.title),
-        content: he.decode(req.body.content),
-        isPublished: req.body.toPublish,
-      });
+      const updatedPost = await Post.findByIdAndUpdate(
+        postObjectId,
+        {
+          title: he.decode(req.body.title),
+          content: he.decode(req.body.content),
+          isPublished: req.body.toPublish,
+        },
+        { new: true },
+      );
 
       if (req.file) {
         updatedPost.image = await uploadImage(req.file.path);
@@ -226,9 +230,9 @@ exports.postPUTComment = [
 exports.postDELComment = [
   expressAsyncHandler(async (req, res, next) => {
     const commentObjectId = new mongoose.Types.ObjectId(req.body.commentId);
-
+    const postObjectId = new mongoose.Types.ObjectId(req.params.id);
     const updatedPost = await Post.findByIdAndUpdate(
-      req.params.id,
+      postObjectId,
       { $pull: { comments: commentObjectId } },
       { new: true },
     ).populate({
