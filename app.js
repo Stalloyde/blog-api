@@ -39,6 +39,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(cors(corsOptions));
+app.options('*', cors());
 
 app.use('/', indexRouter);
 app.use('/mod', modRouter);
