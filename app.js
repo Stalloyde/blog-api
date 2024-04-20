@@ -24,7 +24,7 @@ const limiter = RateLimit({
 const corsOptions = {
   origin: [
     'https://blogapi-client-stalloyde.vercel.app',
-    'http://http://localhost:5173',
+    'http://localhost:5173',
   ],
   optionsSuccessStatus: 200,
 };
