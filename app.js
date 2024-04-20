@@ -23,8 +23,8 @@ const limiter = RateLimit({
 
 const corsOptions = {
   origin:
-    'https://github.com/Stalloyde/blogapi-client' ||
-    'https://github.com/Stalloyde/blogapi-cms',
+    'https://blogapi-client-stalloyde.vercel.app' ||
+    'https://http://localhost:5173',
   optionsSuccessStatus: 200,
 };
 // Apply rate limiter to all requests
