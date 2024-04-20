@@ -20,6 +20,13 @@ const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 50,
 });
+
+const corsOptions = {
+  origin:
+    'https://github.com/Stalloyde/blogapi-client' ||
+    'https://github.com/Stalloyde/blogapi-cms',
+  optionsSuccessStatus: 200,
+};
 // Apply rate limiter to all requests
 app.use(limiter);
 app.use(compression());
@@ -30,7 +37,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use('/', indexRouter);
 app.use('/mod', modRouter);
